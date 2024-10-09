@@ -21,7 +21,7 @@ class FormController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email',
             'message' => 'required|string',
-            'pdf_file' => 'required|mimes:pdf|max:10240', // PDF file max size of MB
+            'pdf_file' => 'required|mimes:pdf|max:10240', // PDF file max size of 10MB
         ]);
 
         // Store the uploaded PDF file
