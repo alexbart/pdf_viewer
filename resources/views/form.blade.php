@@ -41,7 +41,7 @@
                     <input type="email" id="email" name="email" class="w-full border rounded p-2" value="{{ old('email') }}">
                 </div>
                 <div>
-                    <label for="message" class="block text-gray-700">Message</label>
+                    <label for="message" class="block text-gray-700">Notes</label>
                     <textarea id="message" name="message" class="w-full border rounded p-2">{{ old('message') }}</textarea>
                 </div>
                 <div>

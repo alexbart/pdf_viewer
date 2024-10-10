@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\PDFController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,10 +23,17 @@ Route::get('/pdf_upload', function () {
     return view('pdf_upload');
 });
 
+Route::get('/pdf_upload', [FormController::class, 'showForm'])->name('pdf.upload');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('/form', [FormController::class, 'showForm']);
 Route::post('/form', [FormController::class, 'submitForm']);
 Route::get('/pdf_view/{filename}', [FormController::class, 'viewPdf'])->name('pdf.view');
+
+
+
+
+
+
 
 Auth::routes();

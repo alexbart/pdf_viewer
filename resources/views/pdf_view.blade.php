@@ -15,7 +15,7 @@
     <!-- Include PDF.js and pdfAnnotate.js -->
     <script src="{{ asset('js/pdf.js') }}"></script>
     <script src="{{ asset('js/pdf.worker.js') }}"></script>
-    <script src="{{ asset('js/pdf-annotate.min.js') }}"></script>
+    <script src="{{ asset('js/pdf-annotate.js') }}"></script>
 </head>
 <body>
     <h1>View and Annotate PDF</h1>
