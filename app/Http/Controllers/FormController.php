@@ -4,8 +4,10 @@
 
 namespace App\Http\Controllers;
 
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade as PDF;
 
 class FormController extends Controller
 {
@@ -41,8 +43,12 @@ class FormController extends Controller
             abort(404, 'PDF file not found');
         }
 
-        return response()->file($filePath,['Content-Type' => 'application/pdf','Content-Disposition' => 'inline; filename="$filename .']);
+        //return response()->file($filePath,['Content-Type' => 'application/pdf','Content-Disposition' => 'inline; filename="$filename .']);
+        // Use a custom Blade view to display the PDF viewer
+        return view('pdf_view', ['filename' => $filename]);
+
     }
+
 
 }
 
