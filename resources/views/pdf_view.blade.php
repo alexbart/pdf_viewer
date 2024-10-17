@@ -5,30 +5,31 @@
     <meta charset="UTF-8">
     <title>Custom PDF Viewer</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script> <!-- Include jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa; /* Light background for the page */
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Remove default padding */
         }
 
         .container {
-            max-width: 800px;
-            margin: auto;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px; /* Add padding if needed */
         }
 
         #pdf-viewer {
             position: relative;
-            display: inline-block;
+            display: block;
             margin-bottom: 20px; /* Space below the viewer */
         }
 
         #pdf-canvas {
             border: 1px solid #ccc;
             background-color: #fff;
-            width: 100%; /* Make canvas responsive */
+            width: 100%; /* Full width */
             height: auto; /* Maintain aspect ratio */
         }
 
@@ -60,9 +61,9 @@
             font-size: 14px;
             padding: 2px;
             outline: none;
-            background-color: white; /* Set background to white */
-            color: black; /* Set text color to black */
-            z-index: 100; /* Make sure it's on top */
+            background-color: white;
+            color: black;
+            z-index: 100;
         }
 
         /* Centering buttons horizontally */
@@ -74,6 +75,7 @@
             padding: 5px; /* Smaller padding for button group */
             border-radius: 5px;
             margin-bottom: 20px; /* Space between buttons and viewer */
+            width: 100%;
         }
     </style>
 </head>
@@ -133,17 +135,12 @@
 
         const renderPage = (num) => {
             pdfDoc.getPage(num).then((page) => {
-                const viewport = page.getViewport({
-                    scale
-                });
+                const viewport = page.getViewport({ scale });
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
                 annotationCanvas.width = viewport.width;
                 annotationCanvas.height = viewport.height;
-                page.render({
-                    canvasContext: ctx,
-                    viewport
-                });
+                page.render({ canvasContext: ctx, viewport });
             });
         };
 
@@ -185,32 +182,29 @@
             renderPage(pageNum);
         });
 
-        document.getElementById('highlight').addEventListener('click', () => {
+        const setupHighlightTool = () => {
             resetListeners();
             annotationCtx.fillStyle = document.getElementById('highlight-color').value;
             activeTool = 'highlight';
             annotationCanvas.onmousedown = (e) => {
-                const startX = e.offsetX,
-                    startY = e.offsetY;
+                const startX = e.offsetX;
+                const startY = e.offsetY;
                 annotationCanvas.onmousemove = (ev) => {
-                    annotationCtx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height);
-                    annotationCtx.fillRect(startX, startY, ev.offsetX - startX, ev.offsetY - startY);
+                    annotationCtx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height); // Clear previous highlights
+                    annotationCtx.fillRect(startX, startY, ev.offsetX - startX, ev.offsetY - startY); // Draw new highlight
                 };
                 annotationCanvas.onmouseup = () => {
-                    annotationCanvas.onmousemove = null;
-                    // Redraw previous highlights
+                    annotationCanvas.onmousemove = null; // Stop drawing on mouse up
                     const imgData = annotationCtx.getImageData(0, 0, annotationCanvas.width, annotationCanvas.height);
-                    annotationCtx.putImageData(imgData, 0, 0);
+                    annotationCtx.putImageData(imgData, 0, 0); // Redraw previous highlights
                 };
             };
-        });
+        };
 
-        document.getElementById('scribble').addEventListener('click', () => {
-            resetListeners();
-            setupScribbleTool();
-        });
+        document.getElementById('highlight').addEventListener('click', setupHighlightTool);
 
         const setupScribbleTool = () => {
+            resetListeners();
             annotationCtx.strokeStyle = '#000000';
             annotationCtx.lineWidth = 2;
             annotationCtx.lineCap = 'round';
@@ -228,6 +222,11 @@
             };
         };
 
+        document.getElementById('scribble').addEventListener('click', () => {
+            resetListeners();
+            setupScribbleTool();
+        });
+
         const setupTextTool = () => {
             resetListeners();
             activeTool = 'text';
@@ -235,6 +234,7 @@
                 const x = e.offsetX;
                 const y = e.offsetY;
 
+                // Position the text input where the mouse is clicked
                 textInput.style.display = 'block';
                 textInput.style.left = `${x}px`;
                 textInput.style.top = `${y}px`;
@@ -246,7 +246,7 @@
                     annotationCtx.font = `14px ${selectedFont}`;
                     annotationCtx.fillStyle = 'black'; // Set text color to black
                     annotationCtx.fillText(textInput.value, x, y);
-                    textInput.style.display = 'none';
+                    textInput.style.display = 'none'; // Hide the input after entering text
                 };
             };
         };
@@ -255,31 +255,33 @@
 
         document.getElementById('erase').addEventListener('click', () => {
             resetListeners();
-            activeTool = 'erase';
-            annotationCanvas.onmousedown = (e) => {
-                const startX = e.offsetX,
-                    startY = e.offsetY;
-                annotationCanvas.onmousemove = (ev) => {
-                    annotationCtx.clearRect(ev.offsetX - 5, ev.offsetY - 5, 10, 10);
-                };
-                annotationCanvas.onmouseup = () => {
-                    annotationCanvas.onmousemove = null;
-                };
-            };
+            annotationCtx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height); // Clear annotations
         });
 
+        // Function to save the annotated PDF
         document.getElementById('save').addEventListener('click', () => {
-            const pdf = new jsPDF();
-            pdf.addImage(annotationCanvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width * 0.75, canvas.height * 0.75); // Scale image
-            pdf.save('annotated.pdf');
+            const combinedCanvas = document.createElement('canvas');
+            combinedCanvas.width = canvas.width;
+            combinedCanvas.height = canvas.height;
+
+            const combinedCtx = combinedCanvas.getContext('2d');
+            combinedCtx.drawImage(canvas, 0, 0);
+            combinedCtx.drawImage(annotationCanvas, 0, 0);
+
+            combinedCanvas.toBlob((blob) => {
+                const pdf = new jspdf.jsPDF();
+                pdf.addImage(combinedCanvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297); // A4 size conversion
+                pdf.save(`annotated_page_${pageNum}.pdf`);
+            });
         });
 
         pdfjsLib.getDocument(pdfUrl).promise.then((doc) => {
             pdfDoc = doc;
             renderPage(pageNum);
+        }).catch((error) => {
+            alert("Error loading PDF: " + error.message);
         });
     </script>
 </body>
 
 </html>
-
